@@ -1,0 +1,21 @@
+{
+    "DAG":   "DAG para teste",
+    "Autor": "Lucas F. Diniz",
+    "Steps": [
+        {
+            "Funcao":       "Funcao_01",
+            "Entradas":     ["a", "b", "c"],
+            "Dependencias": []
+        },
+        {
+            "Funcao":       "Funcao_02",
+            "Entradas":     ["d"],
+            "Dependencias": ["Funcao_01"]  
+        },
+        {
+            "Funcao":       "Funcao_03",
+            "Entradas":     ["a", "e"],
+            "Dependencias": []
+        }
+    ]
+}
