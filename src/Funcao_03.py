@@ -1,2 +1,2 @@
 def Funcao_03(x, y):
-    print(x*y)
+    return max(x, y)

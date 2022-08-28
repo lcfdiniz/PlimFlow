@@ -1,2 +1,2 @@
 def Funcao_02(x,y):
-    print(x-y)
+    return x-y

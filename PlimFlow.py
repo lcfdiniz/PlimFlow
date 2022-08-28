@@ -14,6 +14,7 @@ class DAG():
         self.autor = autor
         self.steps = data['Steps']
     
+    # Ordena as steps de acordo com as dependencias
     def order_steps(self):
         self.layers = []
         top = []
@@ -22,7 +23,7 @@ class DAG():
                 top.append(step)
         self.layers.append(top)
         current = [step for layer in self.layers for step in layer]
-        current_f = [step['Funcao'] for step in current]
+        current_f = [step['NomeFuncao'] for step in current]
         remaining = [step for step in self.steps if step not in current]
         while len(remaining) > 0:
             layer = []
@@ -31,16 +32,38 @@ class DAG():
                     layer.append(step)
             self.layers.append(layer)
             current = [step for layer in self.layers for step in layer]
-            current_f = [step['Funcao'] for step in current]
+            current_f = [step['NomeFuncao'] for step in current]
             remaining = [step for step in self.steps if step not in current]
     
+    # Armazena as funcoes especificadas
     def get_functions(self):
-        functions = [step['Funcao'] for layer in self.layers for step in layer]
-        self.pipeline = []
-        for function in functions:
-            module = importlib.import_module(function)
-            method_to_call = getattr(module, function)
-            self.pipeline.append(method_to_call)
+        for layer in self.layers:
+            for step in layer:
+                module = importlib.import_module(step['NomeFuncao'])
+                method_to_call = getattr(module, step['NomeFuncao'])
+                step['Funcao'] = method_to_call
+    
+    # Atualiza as entradas de uma funcao com as saidas de suas dependencias
+    def update_state(self, param):
+        step = [step for layer in self.layers for step in layer if step['NomeFuncao']==param][0]
+        return step['Output']
+
+    # Executa as funcoes de acordo com a ordem especificada
+    def run_pipeline(self):
+        for layer in self.layers:
+            for step in layer:
+                for i, param in enumerate(step['Entradas']):
+                    if param in step['Dependencias']:
+                        # Atualiza as entradas de uma funcao com as saidas de suas dependencias
+                        param = self.update_state(param)
+                        step['Entradas'][i] = param
+                if 'ErrorCode' in step['Entradas']:
+                    step['Output'] == 'ErrorCode'
+                else:
+                    try:
+                        step['Output'] = step['Funcao'](*step['Entradas'])
+                    except:
+                        step['Output'] == 'ErrorCode'
 
  # Verifica a consistencia dos dados
 def assert_data(data):
@@ -48,7 +71,7 @@ def assert_data(data):
         print('Erro. Parâmetro "Steps" não especificado.')
         return False
     else:
-        steps_params = ['Funcao', 'Entradas', 'Dependencias']
+        steps_params = ['NomeFuncao', 'Entradas', 'Dependencias']
         for i, step in enumerate(data['Steps']):
             missing_params = list(set(steps_params) - set(step.keys()))
             for param in missing_params:
@@ -86,8 +109,7 @@ if __name__ == '__main__':
         sys.path.insert(0, './src')
         # Armazena as funcoes especificadas
         dag.get_functions()
-        for step in dag.pipeline:
-            print(step.__code__.co_varnames)
-            step(5,3)
+        # Executa as funcoes de acordo com a ordem especificada
+        dag.run_pipeline()
     else:
         print('Erro na consistência dos dados, por favor verifique o arquivo de definição do workflow.')

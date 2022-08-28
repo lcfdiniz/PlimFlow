@@ -3,19 +3,24 @@
     "Autor": "Lucas F. Diniz",
     "Steps": [
         {
-            "Funcao":       "Funcao_01",
-            "Entradas":     ["a", "b", "c"],
+            "NomeFuncao":   "Funcao_01",
+            "Entradas":     [4, 3],
             "Dependencias": []
         },
         {
-            "Funcao":       "Funcao_02",
-            "Entradas":     ["d"],
+            "NomeFuncao":   "Funcao_02",
+            "Entradas":     ["Funcao_01", 2],
             "Dependencias": ["Funcao_01"]  
         },
         {
-            "Funcao":       "Funcao_03",
-            "Entradas":     ["a", "e"],
+            "NomeFuncao":   "Funcao_03",
+            "Entradas":     [0, 6],
             "Dependencias": []
+        },
+        {
+            "NomeFuncao":   "Funcao_04",
+            "Entradas":     ["Funcao_02", "Funcao_03"],
+            "Dependencias": ["Funcao_02", "Funcao_03"]
         }
     ]
 }
