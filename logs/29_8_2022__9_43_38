@@ -1,0 +1,58 @@
+{
+    "Nome": "DAG para teste",
+    "Autor": "Lucas F. Diniz",
+    "Duracao": 1.69,
+    "Pipeline": [
+        [
+            {
+                "NomeFuncao": "Funcao_01",
+                "Entradas": [
+                    "<class 'int'>",
+                    "<class 'int'>"
+                ],
+                "Dependencias": [],
+                "Funcao": "OK",
+                "Output": "OK"
+            },
+            {
+                "NomeFuncao": "Funcao_03",
+                "Entradas": [
+                    "<class 'int'>",
+                    "<class 'int'>"
+                ],
+                "Dependencias": [],
+                "Funcao": "OK",
+                "Output": "OK"
+            }
+        ],
+        [
+            {
+                "NomeFuncao": "Funcao_02",
+                "Entradas": [
+                    "<class 'int'>",
+                    "<class 'int'>"
+                ],
+                "Dependencias": [
+                    "Funcao_01"
+                ],
+                "Funcao": "OK",
+                "Output": "OK"
+            }
+        ],
+        [
+            {
+                "NomeFuncao": "Funcao_04",
+                "Entradas": [
+                    "<class 'int'>",
+                    "<class 'int'>"
+                ],
+                "Dependencias": [
+                    "Funcao_02",
+                    "Funcao_03"
+                ],
+                "Funcao": "OK",
+                "Output": "OK"
+            }
+        ]
+    ]
+}

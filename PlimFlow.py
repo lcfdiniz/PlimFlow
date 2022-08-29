@@ -2,6 +2,8 @@ import argparse
 import json
 import sys
 import importlib
+import time
+import datetime
 
 # Definicao da versao
 version = '0.0.1'
@@ -30,18 +32,25 @@ class DAG():
             for step in remaining:
                 if all(item in current_f for item in step['Dependencias']):
                     layer.append(step)
-            self.layers.append(layer)
-            current = [step for layer in self.layers for step in layer]
-            current_f = [step['NomeFuncao'] for step in current]
-            remaining = [step for step in self.steps if step not in current]
+            if layer == []:
+                print('Erro. Verifique as dependências declaradas para as steps.')
+                break
+            else:
+                self.layers.append(layer)
+                current = [step for layer in self.layers for step in layer]
+                current_f = [step['NomeFuncao'] for step in current]
+                remaining = [step for step in self.steps if step not in current]
     
     # Armazena as funcoes especificadas
     def get_functions(self):
         for layer in self.layers:
             for step in layer:
-                module = importlib.import_module(step['NomeFuncao'])
-                method_to_call = getattr(module, step['NomeFuncao'])
-                step['Funcao'] = method_to_call
+                try:
+                    module = importlib.import_module(step['NomeFuncao'])
+                    method_to_call = getattr(module, step['NomeFuncao'])
+                    step['Funcao'] = method_to_call
+                except:
+                    step['Funcao'] = 'ErrorCode'
     
     # Atualiza as entradas de uma funcao com as saidas de suas dependencias
     def update_state(self, param):
@@ -57,13 +66,13 @@ class DAG():
                         # Atualiza as entradas de uma funcao com as saidas de suas dependencias
                         param = self.update_state(param)
                         step['Entradas'][i] = param
-                if 'ErrorCode' in step['Entradas']:
-                    step['Output'] == 'ErrorCode'
+                if ('ErrorCode' in step['Entradas']) or (step['Funcao'] == 'ErrorCode'):
+                    step['Output'] = 'ErrorCode'
                 else:
                     try:
                         step['Output'] = step['Funcao'](*step['Entradas'])
                     except:
-                        step['Output'] == 'ErrorCode'
+                        step['Output'] = 'ErrorCode'
 
  # Verifica a consistencia dos dados
 def assert_data(data):
@@ -91,6 +100,24 @@ def open_workflow(path):
         print('Verifique se o mesmo foi especificado corretamente ou se está no formato JSON.')
         return False, []
 
+# Gera um log da execucao em JSON
+def generate_log(dag, delta_t):
+    log = dict()
+    log['Nome'] = dag.nome
+    log['Autor'] = dag.autor
+    log['Duracao'] = round(delta_t*1000.0,2) # Tempo em ms
+    for layer in dag.layers:
+        for step in layer:
+            step['Entradas'] = [str(type(entry)) for entry in step['Entradas']]
+            if step['Funcao'] != 'ErrorCode': step['Funcao'] = 'OK'
+            if step['Output'] != 'ErrorCode': step['Output'] = 'OK'
+    log['Pipeline'] = dag.layers
+    data = datetime.datetime.now()
+    filename = f'{data.day}_{data.month}_{data.year}__{data.hour}_{data.minute}_{data.second}'
+    # Salva o dicionario em formato JSON
+    with open('./logs/' + filename, "w") as outfile:
+        json.dump(log, outfile, indent=4)
+
 if __name__ == '__main__':
     # Inicializando o parser
     parser = argparse.ArgumentParser()
@@ -102,6 +129,8 @@ if __name__ == '__main__':
     # Abre o arquivo com a definicao do workflow e verifica a consistencia dos dados
     checked, data = open_workflow(args.workflow)
     if checked:
+        t = time.time()
+        # Cria um objeto do tipo DAG
         dag = DAG(data)
         # Ordena as steps de acordo com suas dependencias de execucao
         dag.order_steps()
@@ -111,5 +140,9 @@ if __name__ == '__main__':
         dag.get_functions()
         # Executa as funcoes de acordo com a ordem especificada
         dag.run_pipeline()
+        # Registra o intervalo de tempo decorrido na execucao da DAG
+        delta_t = time.time() - t
+        # Gera um log da execucao em JSON
+        generate_log(dag, delta_t)
     else:
         print('Erro na consistência dos dados, por favor verifique o arquivo de definição do workflow.')
