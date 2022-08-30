@@ -1,7 +1,7 @@
 {
     "Nome": "DAG para teste",
     "Autor": "Lucas F. Diniz",
-    "Duracao": 1.0,
+    "Duracao": 5.0,
     "Pipeline": [
         [
             {
